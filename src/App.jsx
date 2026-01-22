@@ -1,15 +1,6 @@
 import React, { useMemo, useState } from "react";
 import "./App.css";
 
-/* ======================
-   SIMPLE LOGIN (CLIENT-SIDE)
-   NOTE: basic protection only
-====================== */
-const AUTH_CONFIG = {
-  username: "admin",
-  password: "fdas123", // palitan mo
-};
-
 const DEFAULT_DEVICE_CATALOG = [
   { key: "smoke", label: "Smoke Detector", points: 1 },
   { key: "heat", label: "Heat Detector", points: 1 },
@@ -94,35 +85,6 @@ function toCSV(rows) {
 }
 
 export default function App() {
-  /* ======================
-     LOGIN STATES
-  ====================== */
-  const [isAuth, setIsAuth] = useState(() => localStorage.getItem("fdas_auth") === "true");
-  const [loginUser, setLoginUser] = useState("");
-  const [loginPass, setLoginPass] = useState("");
-  const [loginError, setLoginError] = useState("");
-
-  function handleLogin() {
-    if (loginUser === AUTH_CONFIG.username && loginPass === AUTH_CONFIG.password) {
-      localStorage.setItem("fdas_auth", "true");
-      setIsAuth(true);
-      setLoginError("");
-    } else {
-      setLoginError("Invalid username or password");
-    }
-  }
-
-  function handleLogout() {
-    localStorage.removeItem("fdas_auth");
-    setIsAuth(false);
-    setLoginUser("");
-    setLoginPass("");
-    setLoginError("");
-  }
-
-  /* ======================
-     APP STATES
-  ====================== */
   const [rules, setRules] = useState(DEFAULT_RULES);
   const [floors, setFloors] = useState([emptyFloor("Ground Floor"), emptyFloor("2nd Floor"), emptyFloor("3rd Floor")]);
 
@@ -137,7 +99,7 @@ export default function App() {
     for (const item of catalog) t[item.key] = 0;
     for (const f of floors) for (const item of catalog) t[item.key] += clampNumber(f[item.key] ?? 0);
     return t;
-  }, [floors, catalog]);
+  }, [floors]);
 
   const totalsWithSpare = useMemo(() => {
     const sp = {};
@@ -252,48 +214,6 @@ export default function App() {
       ? Math.min(100, Math.round((slcPoints / (loopPlan.loopCount * loopPlan.effectiveCap)) * 100))
       : 0;
 
-  /* ======================
-     LOGIN GUARD (EARLY RETURN)
-  ====================== */
-  if (!isAuth) {
-    return (
-      <div className="loginWrap">
-        <div className="loginCard">
-          <h2>🔐 FDAS Configurator</h2>
-          <p className="muted">Authorized access only</p>
-
-          <input
-            className="input"
-            placeholder="Username"
-            value={loginUser}
-            onChange={(e) => setLoginUser(e.target.value)}
-          />
-
-          <input
-            className="input"
-            type="password"
-            placeholder="Password"
-            value={loginPass}
-            onChange={(e) => setLoginPass(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") handleLogin();
-            }}
-          />
-
-          {loginError && <div className="error">{loginError}</div>}
-
-          <button className="btn btnPrimary" onClick={handleLogin}>
-            Login
-          </button>
-
-          <div className="small muted" style={{ textAlign: "center", marginTop: 6 }}>
-            Tip: Press <b>Enter</b> to login
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="app">
       {/* SIDEBAR */}
@@ -345,7 +265,6 @@ export default function App() {
           <div className="actions">
             <button className="btn" onClick={() => setRules(DEFAULT_RULES)}>Reset Limits</button>
             <button className="btn btnPrimary" onClick={addFloor}>+ Add Floor</button>
-            <button className="btn btnDanger" onClick={handleLogout}>Logout</button>
           </div>
         </div>
 
